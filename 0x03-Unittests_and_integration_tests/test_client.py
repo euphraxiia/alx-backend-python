@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """Unit tests for client module"""
+import sys
 import unittest
-from unittest.mock import patch, PropertyMock
+from unittest.mock import patch, PropertyMock, MagicMock
 from parameterized import parameterized
+
+# Mock utils module before importing client
+sys.modules['utils'] = MagicMock()
 from client import GithubOrgClient
 
 
