@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Unit tests for client module"""
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 from parameterized import parameterized
 from client import GithubOrgClient
 
@@ -30,6 +30,7 @@ class TestGithubOrgClient(unittest.TestCase):
         """Test that _public_repos_url returns the expected value"""
         test_payload = {"repos_url": "https://api.github.com/orgs/test/repos"}
         with patch.object(GithubOrgClient, 'org',
+                          new_callable=PropertyMock,
                           return_value=test_payload):
             test_client = GithubOrgClient("test")
             result = test_client._public_repos_url
