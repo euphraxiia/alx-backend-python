@@ -7,7 +7,7 @@ from parameterized import parameterized
 
 # Mock utils module before importing client
 sys.modules['utils'] = MagicMock()
-from client import GithubOrgClient
+from client import GithubOrgClient  # noqa: E402
 
 
 class TestGithubOrgClient(unittest.TestCase):
