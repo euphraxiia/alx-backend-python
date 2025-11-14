@@ -26,3 +26,13 @@ class TestGithubOrgClient(unittest.TestCase):
         )
         self.assertEqual(result, test_payload)
 
+    def test_public_repos_url(self):
+        """Test that _public_repos_url returns the expected value"""
+        test_payload = {"repos_url": "https://api.github.com/orgs/test/repos"}
+        with patch.object(GithubOrgClient, 'org',
+                          return_value=test_payload):
+            test_client = GithubOrgClient("test")
+            result = test_client._public_repos_url
+
+            self.assertEqual(result, test_payload["repos_url"])
+
