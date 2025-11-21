@@ -5,7 +5,15 @@ from django.utils import timezone
 
 
 class User(AbstractUser):
-    """Custom User model extending AbstractUser"""
+    """Custom User model extending AbstractUser
+    
+    Inherits from AbstractUser:
+    - password: stores password hash (VARCHAR, NOT NULL)
+    - Other standard Django user fields
+    
+    Additional fields defined:
+    - user_id, first_name, last_name, email, phone_number, role, created_at
+    """
     ROLE_CHOICES = [
         ('guest', 'Guest'),
         ('host', 'Host'),
@@ -22,6 +30,7 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=150, null=False)
     last_name = models.CharField(max_length=150, null=False)
     email = models.EmailField(unique=True, null=False, db_index=True)
+    # password field is inherited from AbstractUser (stores password hash)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     role = models.CharField(
         max_length=10,
