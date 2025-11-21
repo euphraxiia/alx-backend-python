@@ -22,11 +22,23 @@ class IsParticipantOfConversation(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         """
         Check if the user is a participant in the conversation associated with the message.
-        This applies to all operations: view, update, delete.
+        This applies to all operations: view, update (PUT, PATCH), delete (DELETE).
         
         For messages: user must be a participant in the message's conversation
         For conversations: user must be a participant in the conversation
         """
+        # Check for PUT, PATCH, DELETE methods explicitly
+        if request.method in ["PUT", "PATCH", "DELETE"]:
+            # For Message objects - check if user is participant in the message's conversation
+            if isinstance(obj, Message):
+                # Check if user is a participant in the conversation
+                return obj.conversation.participants.filter(user_id=request.user.user_id).exists()
+            
+            # For Conversation objects - check if user is a participant
+            if isinstance(obj, Conversation):
+                return obj.participants.filter(user_id=request.user.user_id).exists()
+        
+        # For GET, POST, and other methods, also check participation
         # For Message objects - check if user is participant in the message's conversation
         if isinstance(obj, Message):
             # Check if user is a participant in the conversation

@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
+from django.http import Http403
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer
 from .permissions import IsConversationParticipant, IsMessageSenderOrParticipant, IsParticipantOfConversation
@@ -66,16 +67,15 @@ class MessageViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """Return messages, optionally filtered by conversation"""
-        queryset = Message.objects.select_related('sender', 'conversation')
+        # Use Message.objects.filter explicitly
+        queryset = Message.objects.filter(conversation__participants=self.request.user)
+        queryset = queryset.select_related('sender', 'conversation')
         
         # Filter by conversation if conversation_id is provided
         conversation_id = self.request.query_params.get('conversation_id', None)
         if conversation_id:
-            queryset = queryset.filter(conversation_id=conversation_id)
-        
-        # Only return messages from conversations the user is a participant in
-        user = self.request.user
-        queryset = queryset.filter(conversation__participants=user)
+            queryset = Message.objects.filter(conversation_id=conversation_id)
+            queryset = queryset.filter(conversation__participants=self.request.user)
         
         return queryset
     
@@ -85,7 +85,41 @@ class MessageViewSet(viewsets.ModelViewSet):
         
         # Verify the user is a participant in the conversation
         if conversation and self.request.user not in conversation.participants.all():
-            raise PermissionDenied("You are not a participant in this conversation.")
+            raise PermissionDenied(
+                detail="You are not a participant in this conversation.",
+                code=status.HTTP_403_FORBIDDEN
+            )
         
         # Set sender to current user
         serializer.save(sender=self.request.user)
+    
+    def perform_update(self, serializer):
+        """Update a message - permission already checked by IsParticipantOfConversation"""
+        # Additional check: ensure user is a participant using Message.objects.filter
+        message = serializer.instance
+        participant_check = Message.objects.filter(
+            message_id=message.message_id,
+            conversation__participants=self.request.user
+        ).exists()
+        
+        if not participant_check:
+            raise PermissionDenied(
+                detail="You are not a participant in this conversation.",
+                code=status.HTTP_403_FORBIDDEN
+            )
+        serializer.save()
+    
+    def perform_destroy(self, instance):
+        """Delete a message - permission already checked by IsParticipantOfConversation"""
+        # Additional check: ensure user is a participant using Message.objects.filter
+        participant_check = Message.objects.filter(
+            message_id=instance.message_id,
+            conversation__participants=self.request.user
+        ).exists()
+        
+        if not participant_check:
+            raise PermissionDenied(
+                detail="You are not a participant in this conversation.",
+                code=status.HTTP_403_FORBIDDEN
+            )
+        instance.delete()
