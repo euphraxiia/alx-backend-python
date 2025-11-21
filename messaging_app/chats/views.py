@@ -3,11 +3,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
+from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from django.http import Http403
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer
 from .permissions import IsConversationParticipant, IsMessageSenderOrParticipant, IsParticipantOfConversation
+from .pagination import MessagePagination
+from .filters import MessageFilter
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -60,22 +63,18 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     serializer_class = MessageSerializer
     permission_classes = [IsParticipantOfConversation]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    pagination_class = MessagePagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = MessageFilter
     search_fields = ['message_body', 'sender__email', 'sender__first_name', 'sender__last_name']
     ordering_fields = ['sent_at', 'message_id']
     ordering = ['-sent_at']
     
     def get_queryset(self):
-        """Return messages, optionally filtered by conversation"""
-        # Use Message.objects.filter explicitly
+        """Return messages filtered by user's conversations"""
+        # Use Message.objects.filter explicitly - only show messages from conversations user is in
         queryset = Message.objects.filter(conversation__participants=self.request.user)
         queryset = queryset.select_related('sender', 'conversation')
-        
-        # Filter by conversation if conversation_id is provided
-        conversation_id = self.request.query_params.get('conversation_id', None)
-        if conversation_id:
-            queryset = Message.objects.filter(conversation_id=conversation_id)
-            queryset = queryset.filter(conversation__participants=self.request.user)
         
         return queryset
     
