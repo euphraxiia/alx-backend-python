@@ -18,6 +18,7 @@ class User(AbstractUser):
         editable=False,
         db_index=True
     )
+    username = None  # Remove username field since we use email
     first_name = models.CharField(max_length=150, null=False)
     last_name = models.CharField(max_length=150, null=False)
     email = models.EmailField(unique=True, null=False, db_index=True)
