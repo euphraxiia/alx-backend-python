@@ -6,7 +6,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer
-from .permissions import IsConversationParticipant, IsMessageSenderOrParticipant
+from .permissions import IsConversationParticipant, IsMessageSenderOrParticipant, IsParticipantOfConversation
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -54,9 +54,11 @@ class MessageViewSet(viewsets.ModelViewSet):
     list: List all messages (optionally filtered by conversation)
     create: Send a new message to a conversation
     retrieve: Retrieve a specific message
+    update: Update a message (only by participants in the conversation)
+    delete: Delete a message (only by participants in the conversation)
     """
     serializer_class = MessageSerializer
-    permission_classes = [IsMessageSenderOrParticipant]
+    permission_classes = [IsParticipantOfConversation]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['message_body', 'sender__email', 'sender__first_name', 'sender__last_name']
     ordering_fields = ['sent_at', 'message_id']
