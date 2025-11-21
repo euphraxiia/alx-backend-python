@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -18,13 +18,17 @@ class ConversationViewSet(viewsets.ModelViewSet):
     """
     serializer_class = ConversationSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['participants__email', 'participants__first_name', 'participants__last_name']
+    ordering_fields = ['created_at', 'conversation_id']
+    ordering = ['-created_at']
     
     def get_queryset(self):
         """Return conversations where the authenticated user is a participant"""
         user = self.request.user
         return Conversation.objects.filter(participants=user).prefetch_related(
             'participants', 'messages', 'messages__sender'
-        ).order_by('-created_at')
+        )
     
     def perform_create(self, serializer):
         """Create a conversation and ensure the current user is a participant"""
@@ -52,10 +56,14 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['message_body', 'sender__email', 'sender__first_name', 'sender__last_name']
+    ordering_fields = ['sent_at', 'message_id']
+    ordering = ['-sent_at']
     
     def get_queryset(self):
         """Return messages, optionally filtered by conversation"""
-        queryset = Message.objects.select_related('sender', 'conversation').order_by('-sent_at')
+        queryset = Message.objects.select_related('sender', 'conversation')
         
         # Filter by conversation if conversation_id is provided
         conversation_id = self.request.query_params.get('conversation_id', None)
