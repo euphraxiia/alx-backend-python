@@ -6,6 +6,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer
+from .permissions import IsConversationParticipant, IsMessageSenderOrParticipant
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
@@ -17,7 +18,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     retrieve: Retrieve a specific conversation
     """
     serializer_class = ConversationSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsConversationParticipant]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['participants__email', 'participants__first_name', 'participants__last_name']
     ordering_fields = ['created_at', 'conversation_id']
@@ -55,7 +56,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     retrieve: Retrieve a specific message
     """
     serializer_class = MessageSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsMessageSenderOrParticipant]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['message_body', 'sender__email', 'sender__first_name', 'sender__last_name']
     ordering_fields = ['sent_at', 'message_id']
