@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.views.decorators.cache import cache_page
 
 from .models import Message
 
@@ -56,6 +57,7 @@ def unread_inbox(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
+@cache_page(60)
 def threaded_conversation(request: HttpRequest, receiver_id: int) -> HttpResponse:
     """
     Return a threaded view of all messages between the current user and `receiver`.
