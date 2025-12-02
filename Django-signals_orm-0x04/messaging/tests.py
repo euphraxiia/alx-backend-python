@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from .models import Message, Notification
+from .models import Message, MessageHistory, Notification
 
 
 class MessageSignalTests(TestCase):
@@ -44,4 +44,22 @@ class MessageSignalTests(TestCase):
             1,
         )
 
+    def test_message_history_created_on_edit(self) -> None:
+        """Editing a message logs the old content in MessageHistory and sets edited flag."""
+        message = Message.objects.create(
+            sender=self.sender, receiver=self.receiver, content="Original content"
+        )
+        self.assertFalse(message.edited)
+
+        # Edit the message
+        message.content = "Edited content"
+        message.save()
+
+        # Refresh from DB to get updated edited flag
+        message.refresh_from_db()
+        self.assertTrue(message.edited)
+
+        history_entries = MessageHistory.objects.filter(message=message)
+        self.assertEqual(history_entries.count(), 1)
+        self.assertEqual(history_entries.first().old_content, "Original content")
 
