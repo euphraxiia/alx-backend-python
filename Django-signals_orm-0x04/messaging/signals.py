@@ -1,6 +1,7 @@
 """Signal handlers for the messaging app."""
 
-from django.db.models.signals import post_save, pre_save
+from django.contrib.auth import get_user_model
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
 from .models import Message, MessageHistory, Notification
@@ -45,4 +46,32 @@ def log_message_edit(
             old_content=old_instance.content,
         )
         instance.edited = True
+
+
+User = get_user_model()
+
+
+@receiver(post_delete, sender=User)
+def cleanup_user_related_data(sender, instance, **kwargs) -> None:
+    """
+    After a User is deleted, clean up all related messaging data.
+
+    This includes messages (as sender or receiver), notifications, and
+    any message histories tied to those messages.
+    """
+    # Delete messages where the user is sender or receiver
+    messages_qs = Message.objects.filter(sender=instance) | Message.objects.filter(
+        receiver=instance
+    )
+    message_ids = list(messages_qs.values_list("id", flat=True))
+
+    messages_qs.delete()
+
+    # Delete notifications explicitly associated with the user
+    Notification.objects.filter(user=instance).delete()
+
+    # Delete any remaining histories tied to those messages (safety, in case
+    # database constraints are different)
+    if message_ids:
+        MessageHistory.objects.filter(message_id__in=message_ids).delete()
 
