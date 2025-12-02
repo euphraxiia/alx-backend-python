@@ -21,6 +21,14 @@ class Message(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     # Track whether the message has ever been edited after creation
     edited = models.BooleanField(default=False)
+    # Optional reference to the user who performed the last edit
+    edited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="edited_messages",
+    )
 
     def __str__(self) -> str:  # pragma: no cover - trivial
         return f"Message from {self.sender} to {self.receiver} at {self.timestamp}"
