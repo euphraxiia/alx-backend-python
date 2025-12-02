@@ -29,7 +29,7 @@ def stream_user_ages():
         if cursor:
             cursor.close()
         if connection:
-            connection.close()
+            connection.close() 
 
 
 def compute_and_print_average_age():
@@ -42,7 +42,7 @@ def compute_and_print_average_age():
     # Loop 2: single pass aggregation
     for age in stream_user_ages():
         total_age += age
-        count += 1
+        count += 1 
 
     if count == 0:
         print("Average age of users: 0")
