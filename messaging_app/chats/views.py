@@ -6,6 +6,8 @@ from rest_framework.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from django.http import Http403
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer
 from .permissions import IsConversationParticipant, IsMessageSenderOrParticipant, IsParticipantOfConversation
@@ -42,6 +44,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
         if self.request.user not in conversation.participants.all():
             conversation.participants.add(self.request.user)
     
+    @method_decorator(cache_page(60))
     @action(detail=True, methods=['get'])
     def messages(self, request, pk=None):
         """Get all messages in a specific conversation"""
