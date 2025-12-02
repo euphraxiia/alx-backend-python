@@ -23,6 +23,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 
 # Expose port 8000
+# To run: docker run -p 8000:8000 <image-name>
 EXPOSE 8000
 
 # Run migrations and start server
