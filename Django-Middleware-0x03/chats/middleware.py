@@ -81,6 +81,34 @@ class OffensiveLanguageMiddleware:
         return ip
 
 
+class RolePermissionMiddleware:
+    """
+    Middleware that enforces role-based access control for certain actions.
+
+    Only users with role 'admin' or 'moderator' are allowed to proceed.
+    All other users receive HTTP 403.
+    """
+
+    ALLOWED_ROLES = {"admin", "moderator"}
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, "user", None)
+
+        # If no authenticated user is attached to the request, deny access
+        if not getattr(user, "is_authenticated", False):
+            return HttpResponseForbidden("You do not have permission to perform this action.")
+
+        # Fetch role from the custom User model (see chats.models.User.role)
+        user_role = getattr(user, "role", None)
+        if user_role not in self.ALLOWED_ROLES:
+            return HttpResponseForbidden("You must be an admin or moderator to access this resource.")
+
+        return self.get_response(request)
+
+
 class RestrictAccessByTimeMiddleware:
     """
     Blocks requests outside 06:00-21:00 server-local time by returning HTTP 403.
