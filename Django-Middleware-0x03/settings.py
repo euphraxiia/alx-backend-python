@@ -18,8 +18,8 @@ except NameError:
 if "chats.middleware.OffensiveLanguageMiddleware" not in MIDDLEWARE:
     MIDDLEWARE.append("chats.middleware.OffensiveLanguageMiddleware")
 
-if "chats.middleware.RolePermissionMiddleware" not in MIDDLEWARE:
-    MIDDLEWARE.append("chats.middleware.RolePermissionMiddleware")
+if "chats.middleware.RolepermissionMiddleware" not in MIDDLEWARE:
+    MIDDLEWARE.append("chats.middleware.RolepermissionMiddleware")
 
 
 
