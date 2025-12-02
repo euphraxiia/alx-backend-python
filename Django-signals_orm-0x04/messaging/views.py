@@ -35,6 +35,27 @@ def delete_user(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
+def unread_inbox(request: HttpRequest) -> HttpResponse:
+    """
+    Display only unread messages for the current user using the
+    UnreadMessagesManager and an optimized `.only()` query.
+    """
+    unread_messages = Message.unread.for_user(request.user)
+
+    data = [
+        {
+            "id": msg.id,
+            "content": msg.content,
+            "sender": str(msg.sender),
+            "timestamp": msg.timestamp.isoformat(),
+        }
+        for msg in unread_messages
+    ]
+
+    return JsonResponse(data, safe=False)
+
+
+@login_required
 def threaded_conversation(request: HttpRequest, receiver_id: int) -> HttpResponse:
     """
     Return a threaded view of all messages between the current user and `receiver`.

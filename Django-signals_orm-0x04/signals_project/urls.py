@@ -3,11 +3,12 @@
 from django.contrib import admin
 from django.urls import path
 
-from messaging.views import delete_user, threaded_conversation
+from messaging.views import delete_user, threaded_conversation, unread_inbox
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("delete-account/", delete_user, name="delete_user"),
+    path("inbox/unread/", unread_inbox, name="unread_inbox"),
     path(
         "thread/<int:receiver_id>/",
         threaded_conversation,

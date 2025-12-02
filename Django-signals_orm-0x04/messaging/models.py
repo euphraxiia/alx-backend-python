@@ -36,6 +36,22 @@ class MessageQuerySet(models.QuerySet):
         return list(qs)
 
 
+class UnreadMessagesManager(models.Manager):
+    """
+    Custom manager that exposes a helper for fetching unread messages
+    for a given user, optimized with `.only()` to load just the fields
+    needed for an inbox view.
+    """
+
+    def for_user(self, user):
+        return (
+            self.get_queryset()
+                .filter(receiver=user, read=False)
+                .only("id", "content", "sender", "timestamp", "parent_message")
+                .select_related("sender")
+        )
+
+
 class Message(models.Model):
     """
     Message model representing a chat message sent from one user to another.
@@ -53,6 +69,8 @@ class Message(models.Model):
     )
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+    # Mark whether the message has been read by the receiver
+    read = models.BooleanField(default=False)
     # Track whether the message has ever been edited after creation
     edited = models.BooleanField(default=False)
     # Optional reference to the user who performed the last edit
@@ -74,6 +92,7 @@ class Message(models.Model):
     )
 
     objects = MessageQuerySet.as_manager()
+    unread = UnreadMessagesManager()
 
     def __str__(self) -> str:  # pragma: no cover - trivial
         return f"Message from {self.sender} to {self.receiver} at {self.timestamp}"
