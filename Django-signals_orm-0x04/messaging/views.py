@@ -40,7 +40,7 @@ def unread_inbox(request: HttpRequest) -> HttpResponse:
     Display only unread messages for the current user using the
     UnreadMessagesManager and an optimized `.only()` query.
     """
-    unread_messages = Message.unread.for_user(request.user)
+    unread_messages = Message.unread.unread_for_user(request.user)
 
     data = [
         {

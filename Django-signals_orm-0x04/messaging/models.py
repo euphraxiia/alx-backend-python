@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from .managers import UnreadMessagesManager
+
 
 class MessageQuerySet(models.QuerySet):
     """
@@ -34,22 +36,6 @@ class MessageQuerySet(models.QuerySet):
             .order_by("timestamp")
         )
         return list(qs)
-
-
-class UnreadMessagesManager(models.Manager):
-    """
-    Custom manager that exposes a helper for fetching unread messages
-    for a given user, optimized with `.only()` to load just the fields
-    needed for an inbox view.
-    """
-
-    def for_user(self, user):
-        return (
-            self.get_queryset()
-                .filter(receiver=user, read=False)
-                .only("id", "content", "sender", "timestamp", "parent_message")
-                .select_related("sender")
-        )
 
 
 class Message(models.Model):
