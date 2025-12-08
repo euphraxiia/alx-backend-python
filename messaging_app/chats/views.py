@@ -5,7 +5,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
-from django.http import Http403
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from .models import Conversation, Message, User
