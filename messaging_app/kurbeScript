@@ -14,20 +14,12 @@ abort() {
   exit 1
 }
 
-ensure_homebrew() {
-  command -v brew >/dev/null 2>&1 || abort "Homebrew is required to install dependencies (https://brew.sh)."
-}
-
-ensure_tool() {
+ensure_tool_present() {
   local cmd="$1"
-  local pkg="${2:-$1}"
+  local install_url="$2"
 
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    ensure_homebrew
-    log "Installing $cmd via Homebrew..."
-    brew install "$pkg"
-  else
-    log "Found $cmd"
+    abort "$cmd is not installed. Please install it first: $install_url"
   fi
 }
 
@@ -54,8 +46,8 @@ verify_cluster() {
 }
 
 main() {
-  ensure_tool "minikube"
-  ensure_tool "kubectl"
+  ensure_tool_present "minikube" "https://minikube.sigs.k8s.io/docs/start/"
+  ensure_tool_present "kubectl" "https://kubernetes.io/docs/tasks/tools/"
   start_minikube
   verify_cluster
 }
