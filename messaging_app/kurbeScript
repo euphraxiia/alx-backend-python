@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PROFILE="${MINIKUBE_PROFILE:-kurbe-profile}"
+DRIVER="${MINIKUBE_DRIVER:-}"
+
+log() {
+  printf '[INFO] %s\n' "$*"
+}
+
+abort() {
+  printf '[ERROR] %s\n' "$*" >&2
+  exit 1
+}
+
+ensure_homebrew() {
+  command -v brew >/dev/null 2>&1 || abort "Homebrew is required to install dependencies (https://brew.sh)."
+}
+
+ensure_tool() {
+  local cmd="$1"
+  local pkg="${2:-$1}"
+
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    ensure_homebrew
+    log "Installing $cmd via Homebrew..."
+    brew install "$pkg"
+  else
+    log "Found $cmd"
+  fi
+}
+
+start_minikube() {
+  local args=("--profile" "$PROFILE")
+  if [[ -n "$DRIVER" ]]; then
+    args+=("--driver" "$DRIVER")
+  fi
+
+  log "Starting Minikube (profile: $PROFILE)..."
+  minikube start "${args[@]}"
+  log "Minikube is up."
+}
+
+verify_cluster() {
+  log "Switching kubectl context to $PROFILE..."
+  kubectl config use-context "$PROFILE"
+
+  log "Cluster info:"
+  kubectl cluster-info
+
+  log "Available pods (all namespaces):"
+  kubectl get pods --all-namespaces
+}
+
+main() {
+  ensure_tool "minikube"
+  ensure_tool "kubectl"
+  start_minikube
+  verify_cluster
+}
+
+main "$@"
+
